@@ -21,7 +21,6 @@
 #include <hidl/HidlTransportSupport.h>
 #include <livedisplay/sdm/PictureAdjustment.h>
 
-#include "AntiFlicker.h"
 #include "SunlightEnhancement.h"
 #include "livedisplay/sdm/SDMController.h"
 #include <vendor/lineage/livedisplay/2.1/IPictureAdjustment.h>
@@ -32,35 +31,26 @@ using android::status_t;
 
 using ::vendor::lineage::livedisplay::V2_0::sdm::PictureAdjustment;
 using ::vendor::lineage::livedisplay::V2_0::sdm::SDMController;
-using ::vendor::lineage::livedisplay::V2_1::IAntiFlicker;
 using ::vendor::lineage::livedisplay::V2_1::ISunlightEnhancement;
-using ::vendor::lineage::livedisplay::V2_1::implementation::AntiFlicker;
 using ::vendor::lineage::livedisplay::V2_1::implementation::SunlightEnhancement;
+using ::vendor::lineage::livedisplay::V2_1::sdm::SDMController;
 
 int main() {
     status_t status = OK;
     std::shared_ptr<SDMController> controller = std::make_shared<SDMController>();
-    
-    sp<AntiFlicker> af = new AntiFlicker();
     sp<SunlightEnhancement> se = new SunlightEnhancement();
-    sp<PictureAdjustment> pa = new PictureAdjustment(controller);
+
+    std::shared_ptr<SDMController> controller = std::make_shared<SDMController>();
+    android::sp<PictureAdjustment> pictureAdjustment = new PictureAdjustment(controller);
 
     android::hardware::configureRpcThreadpool(1, true /*callerWillJoin*/);
-
-    // AntiFlicker service
-    status = af->registerAsService();
-    if (status != OK) {
-        LOG(ERROR) << "Could not register service for LiveDisplay HAL AntiFlicker Iface ("
-                   << status << ")";
-        return 1;
-    }
     
     // PictureAdjustment service
     status = pa->registerAsService();
     if (status != OK) {
         LOG(ERROR) << "Could not register service for LiveDisplay HAL PictureAdjustment Iface ("
                    << status << ")";
-        return 1;
+        goto shutdown;
     }
 
     // SunlightEnhancement service
